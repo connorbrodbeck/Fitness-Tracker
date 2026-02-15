@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker - Road to 180 lbs</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>Fitness Tracker</h1>
+            <p class="tagline">Road to 180 lbs | Current: <span id="current-weight">145</span> lbs</p>
+            <div class="date-display" id="current-date"></div>
+            <button id="install-btn" class="install-btn" style="display:none;">Install App</button>
+        </header>
+
+        <!-- Quick Stats Dashboard -->
+        <section class="stats-grid">
+            <div class="stat-card water">
+                <h3>Water Today</h3>
+                <div class="stat-value" id="water-status">Not Yet</div>
+                <button onclick="toggleWater()">Mark Complete</button>
+            </div>
+
+            <div class="stat-card calories">
+                <h3>Calories Today</h3>
+                <div class="stat-value" id="calorie-count">0</div>
+                <p class="goal-text">Goal: <span id="calorie-goal">3000</span> cal</p>
+            </div>
+
+            <div class="stat-card gym">
+                <h3>Gym Session</h3>
+                <div class="stat-value" id="gym-status">Not Logged</div>
+                <button onclick="showGymModal()">Log Workout</button>
+            </div>
+
+            <div class="stat-card running">
+                <h3>Running</h3>
+                <div class="stat-value" id="run-distance">0 mi</div>
+                <button onclick="showRunModal()">Log Run</button>
+            </div>
+        </section>
+
+        <!-- Streak Counter -->
+        <section class="streak-section">
+            <h2>Current Streak</h2>
+            <div class="streak-display">
+                <div class="streak-number" id="streak-count">0</div>
+                <div class="streak-label">days in a row</div>
+            </div>
+            <p class="streak-best">Best streak: <span id="best-streak">0</span> days</p>
+        </section>
+
+        <!-- Weekly Progress Chart -->
+        <section class="chart-section">
+            <h2>This Week's Progress</h2>
+            <div class="week-calendar" id="week-calendar"></div>
+        </section>
+
+        <!-- Weight Progress -->
+        <section class="weight-section">
+            <h2>Weight Journey: 145 &rarr; 180 lbs</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="weight-progress"></div>
+            </div>
+            <p class="progress-text">
+                <span id="weight-gained">0</span> lbs gained |
+                <span id="weight-remaining">35</span> lbs to go
+            </p>
+            <div class="weight-chart" id="weight-chart"></div>
+            <button onclick="showWeightModal()">Log Weekly Weight</button>
+        </section>
+
+        <!-- Data Entry Modals -->
+        <div id="gym-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('gym-modal')">&times;</span>
+                <h2>Log Gym Session</h2>
+                <textarea id="gym-exercises" placeholder="What exercises did you do?
+Example:
+- Bench Press: 185 lbs x 5
+- Squats: 225 lbs x 8
+- Pull-ups: 3 sets of 10"></textarea>
+                <input type="text" id="gym-prs" placeholder="Any new PRs? (optional)">
+                <button onclick="saveGymSession()">Save Workout</button>
+            </div>
+        </div>
+
+        <div id="run-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('run-modal')">&times;</span>
+                <h2>Log Run</h2>
+                <input type="number" id="run-distance-input" placeholder="Distance (miles)" step="0.1">
+                <input type="text" id="run-pace" placeholder="Pace (e.g., 8:30 per mile)">
+                <input type="number" id="run-duration" placeholder="Duration (minutes)">
+                <button onclick="saveRun()">Save Run</button>
+            </div>
+        </div>
+
+        <div id="calorie-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('calorie-modal')">&times;</span>
+                <h2>Log Meal</h2>
+                <input type="text" id="meal-name" placeholder="What did you eat?">
+                <input type="number" id="meal-calories" placeholder="Calories">
+                <button onclick="saveMeal()">Add Meal</button>
+                <div id="meal-list" class="meal-list"></div>
+            </div>
+        </div>
+
+        <div id="weight-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('weight-modal')">&times;</span>
+                <h2>Log Weekly Weight</h2>
+                <input type="number" id="weight-input" placeholder="Current weight (lbs)" step="0.1">
+                <button onclick="saveWeight()">Save Weight</button>
+            </div>
+        </div>
+
+        <!-- Today's Meals -->
+        <section class="meals-section">
+            <h2>Today's Meals</h2>
+            <div id="today-meals"></div>
+        </section>
+
+        <!-- History Section -->
+        <section class="history-section">
+            <h2>Recent Activity</h2>
+            <div id="activity-log"></div>
+        </section>
+
+        <!-- Quick Add Buttons -->
+        <div class="quick-actions">
+            <button onclick="showModal('calorie-modal')">+ Add Meal</button>
+            <button onclick="exportData()">Export Data</button>
+            <button onclick="resetDay()">Reset Today</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.log('SW registration failed:', err));
+    }
+
+    // Install prompt
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-btn');
+
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.style.display = 'inline-block';
+    });
+
+    installBtn.addEventListener('click', () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(choice => {
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+        });
+    });
+
+    window.addEventListener('appinstalled', () => {
+        installBtn.style.display = 'none';
+    });
+    </script>
+</body>
+</html>

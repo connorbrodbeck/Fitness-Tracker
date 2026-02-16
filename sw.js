@@ -1,8 +1,9 @@
-const CACHE_NAME = 'fitness-tracker-v1';
+const CACHE_NAME = 'fitness-tracker-v2';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
+  './api.js',
   './app.js',
   './manifest.json',
   './icons/icon-192.png',
@@ -29,8 +30,27 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch — cache-first, fall back to network
+// Fetch — network-first for API, cache-first for static assets
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // Network-first for API requests
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => response)
+        .catch(() => {
+          // API offline — return a generic offline response
+          return new Response(JSON.stringify({ error: 'Offline' }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        })
+    );
+    return;
+  }
+
+  // Cache-first for static assets
   event.respondWith(
     caches.match(event.request).then(cached => {
       return cached || fetch(event.request).then(response => {

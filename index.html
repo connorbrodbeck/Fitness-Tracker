@@ -15,14 +15,54 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Auth Overlay -->
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-container">
+            <h1>Fitness Tracker</h1>
+            <p class="auth-subtitle">Road to your goals</p>
+
+            <div id="auth-tabs" class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+            </div>
+
+            <div id="auth-error" class="auth-error" style="display:none;"></div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+                <input type="text" id="login-username" placeholder="Username" required autocomplete="username">
+                <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
+                <button type="submit">Login</button>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signup-form" class="auth-form" style="display:none;" onsubmit="handleSignup(event)">
+                <input type="text" id="signup-username" placeholder="Username" required autocomplete="username">
+                <input type="password" id="signup-password" placeholder="Password (min 6 chars)" required minlength="6" autocomplete="new-password">
+                <label for="signup-weight" class="auth-label">Your Weight (lbs)</label>
+                <input type="number" id="signup-weight" step="0.1" value="145" required>
+                <label for="signup-goal" class="auth-label">Weight Goal (lbs)</label>
+                <input type="number" id="signup-goal" step="0.1" value="180" required>
+                <button type="submit">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container" id="app-container" style="display:none;">
         <!-- Header -->
         <header>
-            <h1>Fitness Tracker</h1>
-            <p class="tagline">Road to 180 lbs | Current: <span id="current-weight">145</span> lbs</p>
+            <div class="header-top">
+                <a id="admin-link" href="admin.html" style="display:none; position: absolute; left: 0; color: #667eea; font-weight: 600; text-decoration: none; padding: 6px 16px; border: 2px solid #667eea; border-radius: 20px; font-size: 0.9em; transition: all 0.3s;">Admin</a>
+                <h1>Fitness Tracker</h1>
+                <button id="logout-btn" class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+            <p class="tagline" id="tagline">Road to <span id="goal-weight-display">180</span> lbs | Current: <span id="current-weight">145</span> lbs</p>
             <div class="date-display" id="current-date"></div>
             <button id="install-btn" class="install-btn" style="display:none;">Install App</button>
         </header>
+
+        <!-- Motivation Quote Banner -->
+        <div class="quote-banner" id="quote-banner"></div>
 
         <!-- Quick Stats Dashboard -->
         <section class="stats-grid">
@@ -67,9 +107,22 @@
             <div class="week-calendar" id="week-calendar"></div>
         </section>
 
+        <!-- Monthly Calendar -->
+        <section class="monthly-section">
+            <div class="monthly-header">
+                <button onclick="prevMonth()" class="month-nav-btn">&larr;</button>
+                <h2 id="monthly-title">Monthly Overview</h2>
+                <button onclick="nextMonth()" class="month-nav-btn">&rarr;</button>
+            </div>
+            <div class="monthly-day-labels">
+                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div class="monthly-calendar" id="monthly-calendar"></div>
+        </section>
+
         <!-- Weight Progress -->
         <section class="weight-section">
-            <h2>Weight Journey: 145 &rarr; 180 lbs</h2>
+            <h2 id="weight-journey-title">Weight Journey: 145 &rarr; 180 lbs</h2>
             <div class="progress-bar">
                 <div class="progress-fill" id="weight-progress"></div>
             </div>
@@ -81,11 +134,45 @@
             <button onclick="showWeightModal()">Log Weekly Weight</button>
         </section>
 
+        <!-- Progress Photos -->
+        <section class="photos-section">
+            <h2>Progress Photos</h2>
+            <div class="photos-gallery" id="photos-gallery">
+                <p style="color:#999; padding:10px;">No progress photos yet.</p>
+            </div>
+            <button onclick="showModal('photo-upload-modal')" class="photo-upload-btn">Upload Progress Photo</button>
+        </section>
+
+        <!-- Photo Upload Modal -->
+        <div id="photo-upload-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('photo-upload-modal')">&times;</span>
+                <h2>Upload Progress Photo</h2>
+                <input type="file" id="photo-file-input" accept="image/*" onchange="previewPhoto(this)">
+                <img id="photo-preview" class="photo-preview" style="display:none;">
+                <input type="date" id="photo-date-input">
+                <input type="text" id="photo-notes" placeholder="Notes (optional)">
+                <input type="number" id="photo-weight" placeholder="Weight at time (optional)" step="0.1">
+                <button onclick="uploadProgressPhoto()">Save Photo</button>
+            </div>
+        </div>
+
+        <!-- Photo View Modal -->
+        <div id="photo-view-modal" class="modal">
+            <div class="modal-content photo-view-content">
+                <span class="close" onclick="closeModal('photo-view-modal')">&times;</span>
+                <img id="photo-view-img" class="photo-view-img">
+                <div id="photo-view-details" class="photo-view-details"></div>
+                <button onclick="deleteViewedPhoto()" class="photo-delete-btn">Delete Photo</button>
+            </div>
+        </div>
+
         <!-- Data Entry Modals -->
         <div id="gym-modal" class="modal">
             <div class="modal-content">
                 <span class="close" onclick="closeModal('gym-modal')">&times;</span>
                 <h2>Log Gym Session</h2>
+                <div class="exercise-library" id="exercise-library-container"></div>
                 <textarea id="gym-exercises" placeholder="What exercises did you do?
 Example:
 - Bench Press: 185 lbs x 5
@@ -111,9 +198,13 @@ Example:
             <div class="modal-content">
                 <span class="close" onclick="closeModal('calorie-modal')">&times;</span>
                 <h2>Log Meal</h2>
+                <div class="presets-container" id="meal-presets-container"></div>
                 <input type="text" id="meal-name" placeholder="What did you eat?">
                 <input type="number" id="meal-calories" placeholder="Calories">
-                <button onclick="saveMeal()">Add Meal</button>
+                <div class="modal-btn-row">
+                    <button onclick="saveMeal()">Add Meal</button>
+                    <button onclick="saveAsPreset()" class="preset-save-btn">Save as Preset</button>
+                </div>
                 <div id="meal-list" class="meal-list"></div>
             </div>
         </div>
@@ -147,6 +238,7 @@ Example:
         </div>
     </div>
 
+    <script src="api.js"></script>
     <script src="app.js"></script>
     <script>
     // Register service worker

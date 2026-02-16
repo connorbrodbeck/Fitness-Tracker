@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Fitness Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Admin-specific styles */
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .admin-header h1 {
+            font-size: 2.2em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .admin-header p {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .admin-nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 2px solid #667eea;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+
+        .admin-nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Admin stats row */
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .admin-stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .admin-stat-card h3 {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .admin-stat-card .stat-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* Section titles */
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        /* User cards grid */
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .user-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .user-card.is-admin {
+            border: 2px solid #f5576c;
+        }
+
+        .user-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .user-card-header h3 {
+            font-size: 1.2em;
+            color: #333;
+            margin: 0;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-admin {
+            background: #f5576c;
+            color: white;
+        }
+
+        .badge-active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .badge-inactive {
+            background: #ff9800;
+            color: white;
+        }
+
+        .user-card-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .user-card-stats strong {
+            color: #333;
+        }
+
+        /* Activity feed */
+        .activity-feed {
+            max-height: 500px;
+            overflow-y: auto;
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
+
+        .feed-item {
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .feed-item.type-meal { border-left-color: #fcb69f; }
+        .feed-item.type-gym { border-left-color: #f5576c; }
+        .feed-item.type-run { border-left-color: #a1c4fd; }
+
+        .feed-item .feed-user {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .feed-item .feed-time {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        /* User detail modal — wider */
+        .detail-modal .modal-content {
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .detail-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f7fa;
+            border-radius: 10px;
+        }
+
+        .detail-section h3 {
+            margin-bottom: 10px;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .detail-section p {
+            margin: 6px 0;
+            color: #555;
+        }
+
+        .detail-section p strong {
+            color: #333;
+        }
+
+        .detail-item {
+            padding: 8px 12px;
+            margin: 6px 0;
+            background: white;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        .detail-item pre {
+            margin: 5px 0;
+            white-space: pre-wrap;
+            font-family: inherit;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        /* Weight mini chart */
+        .weight-chart-mini {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 80px;
+            margin-top: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .weight-bar-mini {
+            flex: 1;
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            border-radius: 3px 3px 0 0;
+            min-width: 8px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .weight-bar-mini:hover::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: 105%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-danger {
+            background: #f5576c !important;
+        }
+
+        .btn-danger:hover {
+            background: #d9465a !important;
+        }
+
+        .btn-secondary {
+            background: #999 !important;
+        }
+
+        .btn-secondary:hover {
+            background: #777 !important;
+        }
+
+        /* Edit form labels */
+        .edit-label {
+            display: block;
+            text-align: left;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #555;
+            margin-top: 12px;
+            margin-bottom: 2px;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-size: 1.1em;
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 1.1em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .admin-nav {
+                justify-content: center;
+            }
+
+            .users-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .detail-modal .modal-content {
+                margin: 5% auto;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <header class="admin-header">
+            <div>
+                <h1>Admin Dashboard</h1>
+                <p>Manage users and monitor activity</p>
+            </div>
+            <div class="admin-nav">
+                <a href="index.html">Back to Dashboard</a>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </header>
+
+        <!-- Quick Stats -->
+        <section class="admin-stats">
+            <div class="admin-stat-card">
+                <h3>Total Users</h3>
+                <div class="stat-value" id="total-users">-</div>
+            </div>
+            <div class="admin-stat-card">
+                <h3>Active Today</h3>
+                <div class="stat-value" id="active-today">-</div>
+            </div>
+            <div class="admin-stat-card">
+                <h3>Active This Week</h3>
+                <div class="stat-value" id="active-week">-</div>
+            </div>
+            <div class="admin-stat-card">
+                <h3>Avg Goal Weight</h3>
+                <div class="stat-value" id="avg-goal">-</div>
+            </div>
+        </section>
+
+        <!-- All Users -->
+        <section>
+            <h2 class="section-title">All Users</h2>
+            <div id="users-grid" class="users-grid">
+                <div class="loading">Loading users...</div>
+            </div>
+        </section>
+
+        <!-- Activity Feed -->
+        <section>
+            <h2 class="section-title">Recent Activity</h2>
+            <div id="activity-feed" class="activity-feed">
+                <div class="loading">Loading activity...</div>
+            </div>
+        </section>
+    </div>
+
+    <!-- User Detail Modal -->
+    <div id="user-detail-modal" class="modal detail-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('user-detail-modal')">&times;</span>
+            <div id="user-detail-content"></div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('edit-user-modal')">&times;</span>
+            <h2>Edit User</h2>
+            <form id="edit-user-form" onsubmit="saveUserEdits(event)">
+                <input type="hidden" id="edit-user-id">
+
+                <label class="edit-label">Reset Password</label>
+                <input type="password" id="edit-password" placeholder="Leave blank to keep current password">
+
+                <label class="edit-label">Calorie Goal</label>
+                <input type="number" id="edit-calorie-goal" placeholder="Daily calorie target">
+
+                <label class="edit-label">Goal Weight (lbs)</label>
+                <input type="number" step="0.1" id="edit-goal-weight" placeholder="Target weight">
+
+                <div class="checkbox-row">
+                    <input type="checkbox" id="edit-is-admin">
+                    <label for="edit-is-admin">Admin Privileges</label>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="submit">Save Changes</button>
+                    <button type="button" class="btn-danger" onclick="deleteUser()">Delete User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

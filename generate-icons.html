@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head><title>Generate PWA Icons</title></head>
+<body>
+<h1>PWA Icon Generator</h1>
+<p>Right-click each canvas and "Save image as..." to save the icons.</p>
+<h2>192x192</h2>
+<canvas id="c192" width="192" height="192"></canvas>
+<h2>512x512</h2>
+<canvas id="c512" width="512" height="512"></canvas>
+<script>
+function drawIcon(canvas) {
+  const s = canvas.width;
+  const ctx = canvas.getContext('2d');
+  const r = s * 80 / 512;
+
+  // Background gradient
+  const grad = ctx.createLinearGradient(0, 0, s, s);
+  grad.addColorStop(0, '#667eea');
+  grad.addColorStop(1, '#764ba2');
+
+  // Rounded rect
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(s - r, 0);
+  ctx.quadraticCurveTo(s, 0, s, r);
+  ctx.lineTo(s, s - r);
+  ctx.quadraticCurveTo(s, s, s - r, s);
+  ctx.lineTo(r, s);
+  ctx.quadraticCurveTo(0, s, 0, s - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Dumbbell
+  ctx.fillStyle = 'white';
+  const cx = s / 2, cy = s * 0.45;
+  const scale = s / 512;
+
+  // Bar
+  roundRect(ctx, cx - 120*scale, cy - 12*scale, 240*scale, 24*scale, 12*scale);
+  // Left weight
+  roundRect(ctx, cx - 160*scale, cy - 50*scale, 50*scale, 100*scale, 10*scale);
+  // Right weight
+  roundRect(ctx, cx + 110*scale, cy - 50*scale, 50*scale, 100*scale, 10*scale);
+  // Left cap
+  roundRect(ctx, cx - 175*scale, cy - 35*scale, 20*scale, 70*scale, 8*scale);
+  // Right cap
+  roundRect(ctx, cx + 155*scale, cy - 35*scale, 20*scale, 70*scale, 8*scale);
+
+  // "FIT" text
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.font = `bold ${72*scale}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('FIT', cx, s * 0.82);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.fill();
+}
+
+drawIcon(document.getElementById('c192'));
+drawIcon(document.getElementById('c512'));
+
+// Auto-download
+function downloadCanvas(canvas, filename) {
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// Download after a short delay
+setTimeout(() => {
+  downloadCanvas(document.getElementById('c192'), 'icon-192.png');
+  setTimeout(() => downloadCanvas(document.getElementById('c512'), 'icon-512.png'), 500);
+}, 1000);
+</script>
+</body>
+</html>
